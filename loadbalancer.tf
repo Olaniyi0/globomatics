@@ -1,4 +1,5 @@
 resource "azurerm_application_gateway" "webserver-gateway" {
+  depends_on = [ azurerm_subnet.frontend ]
   name                = "webserver-gateway"
   resource_group_name = local.rg-name
   location            = local.rg-location

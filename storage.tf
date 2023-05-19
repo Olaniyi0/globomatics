@@ -24,7 +24,9 @@ resource "azurerm_storage_container" "web-resources" {
 # }
 
 resource "null_resource" "blob_upload" {
-  depends_on = [ azurerm_storage_container.web-resources ]
+  depends_on = [ 
+    azurerm_storage_container.web-resources ,
+    ]
   provisioner "local-exec" {
     command = <<-EOT
       #!/bin/bash

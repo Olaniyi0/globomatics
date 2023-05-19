@@ -8,7 +8,7 @@ resource "azurerm_user_assigned_identity" "webservers-userid" {
 resource "azurerm_virtual_machine" "webserver1" {
   depends_on = [
     azurerm_role_assignment.vm1-blob-contributor,
-    azurerm_storage_container.web-resources,
+    null_resource.blob_upload
   ]
   name                          = "webserver1"
   resource_group_name           = local.rg-name
@@ -38,10 +38,12 @@ resource "azurerm_virtual_machine" "webserver1" {
     #!/bin/bash
     sudo apt -y update
     sudo apt -y install nginx
-    wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1
-    export AZCOPY_AUTO_LOGIN_TYPE=MSI
-    export export AZCOPY_MSI_msiid="${azurerm_user_assigned_identity.webservers-userid.id}"
-    ./azcopy copy "https://${var.storage-account-name}.blob.core.windows.net/${local.container-name}/" "./" --recursive
+    sudo wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1
+    sudo echo export AZCOPY_AUTO_LOGIN_TYPE=MSI >> .bashrc
+    sudo echo export AZCOPY_MSI_msiid="${azurerm_user_assigned_identity.webservers-userid.id}" >> .bashrc
+    sudo echo export azcopy=./azcopy >> .bashrc
+    source .bashrc
+    azcopy copy "https://${var.storage-account-name}.blob.core.windows.net/${local.container-name}/" "./" --recursive
     sudo rm -r /var/www/html
     sudo mv ${local.container-name} html
     sudo cp -r html /var/www/ 
@@ -60,7 +62,7 @@ resource "azurerm_virtual_machine" "webserver1" {
 resource "azurerm_virtual_machine" "webserver2" {
   depends_on = [
     azurerm_role_assignment.vm2-blob-contributor,
-    azurerm_storage_container.web-resources,
+    null_resource.blob_upload
   ]
   name                          = "webserver2"
   resource_group_name           = local.rg-name
