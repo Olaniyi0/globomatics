@@ -1,5 +1,5 @@
 resource "azurerm_application_gateway" "webserver-gateway" {
-  depends_on = [ azurerm_subnet.frontend ]
+  depends_on          = [azurerm_subnet.frontend]
   name                = "webserver-gateway"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -57,4 +57,17 @@ resource "azurerm_application_gateway" "webserver-gateway" {
   }
 }
 
+resource "azurerm_monitor_diagnostic_setting" "app-gateway-log" {
+  depends_on = [ azurerm_application_gateway.webserver-gateway ]
+  name               = "app-gateway-access-logs"
+  target_resource_id = azurerm_application_gateway.webserver-gateway.id
+  storage_account_id = azurerm_storage_account.globomatics-storage-account.id
 
+  enabled_log {
+    category = "ApplicationGatewayAccessLog"
+     retention_policy {
+      enabled = true
+      days = 0
+    }
+  }
+}

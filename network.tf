@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "globomatics-rg" {
 }
 
 resource "azurerm_virtual_network" "globomatics-network" {
-  depends_on = [ azurerm_resource_group.globomatics-rg ]
+  depends_on          = [azurerm_resource_group.globomatics-rg]
   name                = "globomatics-network"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -13,7 +13,7 @@ resource "azurerm_virtual_network" "globomatics-network" {
 }
 
 resource "azurerm_subnet" "subnet1" {
-  depends_on = [ azurerm_virtual_network.globomatics-network ]
+  depends_on           = [azurerm_virtual_network.globomatics-network]
   name                 = "subnet1"
   resource_group_name  = local.rg-name
   virtual_network_name = azurerm_virtual_network.globomatics-network.name
@@ -21,7 +21,7 @@ resource "azurerm_subnet" "subnet1" {
 }
 
 resource "azurerm_subnet" "frontend" {
-  depends_on = [ azurerm_virtual_network.globomatics-network ]
+  depends_on           = [azurerm_virtual_network.globomatics-network]
   name                 = "AGSsubnet"
   resource_group_name  = local.rg-name
   virtual_network_name = azurerm_virtual_network.globomatics-network.name
@@ -29,7 +29,7 @@ resource "azurerm_subnet" "frontend" {
 }
 
 resource "azurerm_network_security_group" "allowInboundTCP" {
-  depends_on = [ azurerm_virtual_network.globomatics-network ]
+  depends_on          = [azurerm_virtual_network.globomatics-network]
   name                = "allowInboundTCP"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -47,13 +47,13 @@ resource "azurerm_network_security_group" "allowInboundTCP" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "subnet1AllowTCP" {
-  depends_on = [ azurerm_network_security_group.allowInboundTCP ]
+  depends_on                = [azurerm_network_security_group.allowInboundTCP]
   subnet_id                 = azurerm_subnet.subnet1.id
   network_security_group_id = azurerm_network_security_group.allowInboundTCP.id
 }
 
 resource "azurerm_public_ip" "vm1-public-ip" {
-  depends_on = [ azurerm_resource_group.globomatics-rg ]
+  depends_on          = [azurerm_resource_group.globomatics-rg]
   name                = "vm1-public-ip"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -63,7 +63,7 @@ resource "azurerm_public_ip" "vm1-public-ip" {
 }
 
 resource "azurerm_public_ip" "lb-pip" {
-  depends_on = [ azurerm_resource_group.globomatics-rg ]
+  depends_on          = [azurerm_resource_group.globomatics-rg]
   name                = "lb-pip"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -71,7 +71,7 @@ resource "azurerm_public_ip" "lb-pip" {
 }
 
 resource "azurerm_network_interface" "nic1" {
-  depends_on = [ azurerm_subnet.subnet1 ]
+  depends_on          = [azurerm_subnet.subnet1]
   name                = "nic1"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -85,7 +85,7 @@ resource "azurerm_network_interface" "nic1" {
 
 
 resource "azurerm_network_interface" "nic2" {
-  depends_on = [ azurerm_subnet.subnet1 ]
+  depends_on          = [azurerm_subnet.subnet1]
   name                = "nic2"
   resource_group_name = local.rg-name
   location            = local.rg-location
