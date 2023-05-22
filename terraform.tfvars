@@ -1,6 +1,5 @@
 resource-group-name  = "globomatics-rg"
-computer-name        = "server1"
-computer-name2       = "server2"
+computer-name        = "server"
 admin-username       = "olaniyi"
 enviroment-name      = "test-env"
 project-name         = "globomatics-staging"

@@ -1,5 +1,5 @@
 output "webserver-public-ip" {
-  value = azurerm_public_ip.vm1-public-ip.ip_address
+  value = [for address in azurerm_public_ip.vm-public-ip: address.ip_address]
 }
 
 output "loadbalancer-public-ip" {

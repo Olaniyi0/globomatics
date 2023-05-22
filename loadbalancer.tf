@@ -29,7 +29,7 @@ resource "azurerm_application_gateway" "webserver-gateway" {
 
   backend_address_pool {
     name         = local.backend_address_pool_name
-    ip_addresses = [azurerm_network_interface.nic1.private_ip_address, azurerm_network_interface.nic2.private_ip_address]
+    ip_addresses = [for nic in azurerm_network_interface.nic: nic.private_ip_address]
   }
 
   backend_http_settings {

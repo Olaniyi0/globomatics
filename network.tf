@@ -52,13 +52,14 @@ resource "azurerm_subnet_network_security_group_association" "subnet1AllowTCP" {
   network_security_group_id = azurerm_network_security_group.allowInboundTCP.id
 }
 
-resource "azurerm_public_ip" "vm1-public-ip" {
+resource "azurerm_public_ip" "vm-public-ip" {
+  count = var.number-of-vm
   depends_on          = [azurerm_resource_group.globomatics-rg]
-  name                = "vm1-public-ip"
+  name                = "vm${count.index + 1}-pip"
   resource_group_name = local.rg-name
   location            = local.rg-location
   allocation_method   = "Static"
-  zones               = ["2"]
+  zones               = [random_integer.zone[count.index].result]
   sku                 = "Standard"
 }
 
@@ -70,30 +71,16 @@ resource "azurerm_public_ip" "lb-pip" {
   allocation_method   = "Dynamic"
 }
 
-resource "azurerm_network_interface" "nic1" {
+resource "azurerm_network_interface" "nic" {
+  count = var.number-of-vm
   depends_on          = [azurerm_subnet.subnet1]
-  name                = "nic1"
+  name                = "nic${count.index}"
   resource_group_name = local.rg-name
   location            = local.rg-location
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnet1.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.vm1-public-ip.id
+    public_ip_address_id          = azurerm_public_ip.vm-public-ip[count.index].id
   }
 }
-
-
-resource "azurerm_network_interface" "nic2" {
-  depends_on          = [azurerm_subnet.subnet1]
-  name                = "nic2"
-  resource_group_name = local.rg-name
-  location            = local.rg-location
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.subnet1.id
-    private_ip_address_allocation = "Dynamic"
-  }
-}
-
-

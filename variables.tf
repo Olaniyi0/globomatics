@@ -32,11 +32,6 @@ variable "computer-name" {
   type        = string
 }
 
-variable "computer-name2" {
-  description = "Name of your computer (hostname)"
-  type        = string
-}
-
 variable "admin-username" {
   description = "username of the admin"
   type        = string
@@ -89,4 +84,10 @@ variable "storage-account-name" {
 variable "subscription-id" {
   description = "ID of the subscription resources will be created in"
   type        = string
+}
+
+variable "number-of-vm" {
+  description = "Number of VMs to be deployed"
+  type = number
+  default = 2
 }

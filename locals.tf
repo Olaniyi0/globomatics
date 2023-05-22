@@ -7,6 +7,7 @@ resource "random_integer" "rand" {
   # }
 }
 
+
 locals {
   rg-location = var.resource-group-location
   rg-name     = var.resource-group-name
