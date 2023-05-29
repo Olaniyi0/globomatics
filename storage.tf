@@ -1,18 +1,11 @@
-resource "azurerm_storage_account" "globomatics-storage-account" {
-  depends_on               = [azurerm_resource_group.globomatics-rg]
-  name                     = var.storage-account-name
-  resource_group_name      = local.rg-name
-  location                 = local.rg-location
-  account_tier             = "Standard"
-  account_replication_type = "GRS"
-  tags                     = local.common-tags
-}
-
-resource "azurerm_storage_container" "web-resources" {
-  depends_on            = [azurerm_storage_account.globomatics-storage-account]
-  name                  = local.container-name
-  storage_account_name  = var.storage-account-name
-  container_access_type = "private"
+module "globomatics_storage" {
+  depends_on = [ azurerm_resource_group.globomatics-rg ]
+  source = "./modules/storage-account"
+  resource_group_name = var.resource-group-name
+  resource_group_location = var.resource-group-location
+  storage_account_name = local.storage_account_name
+  container_names = var.container_name
+  storage_account_tags = local.common-tags
 }
 
 # resource "azurerm_storage_blob" "web-files" {
@@ -25,13 +18,11 @@ resource "azurerm_storage_container" "web-resources" {
 # }
 
 resource "null_resource" "blob_upload" {
-  depends_on = [
-    azurerm_storage_container.web-resources,
-  ]
+  depends_on = [module.globomatics_storage]
   provisioner "local-exec" {
     command     = <<-EOT
       #!/bin/bash
-      az storage blob upload-batch --account-name="${var.storage-account-name}" --destination="${local.container-name}" --source="./web"
+      az storage blob upload-batch --account-name="${lower(local.storage_account_name)}" --destination="${var.container_name[0]}" --source="./web"
     EOT
     interpreter = ["bash", "-c"]
   }
@@ -41,9 +32,10 @@ resource "null_resource" "blob_upload" {
 resource "azurerm_role_assignment" "vm-blob-contributor" {
   depends_on = [
     azurerm_user_assigned_identity.webservers-userid,
-    azurerm_storage_account.globomatics-storage-account
+    module.globomatics_storage
   ]
-  scope                = "/subscriptions/${var.subscription-id}/resourceGroups/${local.rg-name}/providers/Microsoft.Storage/storageAccounts/${var.storage-account-name}"
+  scope                = "/subscriptions/${var.subscription-id}/resourceGroups/${local.rg-name}/providers/Microsoft.Storage/storageAccounts/${lower(local.storage_account_name)}"
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.webservers-userid.principal_id
 }
+

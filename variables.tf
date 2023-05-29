@@ -11,8 +11,20 @@ variable "resource-group-name" {
 
 variable "network-address-space" {
   description = "Adress space of the virtual network"
-  type        = list(string)
-  default     = ["10.0.0.0/16"]
+  type        = map(string)
+  default = {
+    Development = "10.10.0.0/16",
+    Production  = "10.0.0.0/16"
+  }
+}
+
+variable "vpc-subnet-count" {
+  description = "The number of subnet to be created"
+  type        = map(number)
+  default = {
+    Development = 2
+    Production  = 3
+  }
 }
 
 variable "delete-os-disk-on-termination" {
@@ -23,8 +35,11 @@ variable "delete-os-disk-on-termination" {
 
 variable "vm-size" {
   description = "The size of the virtual machine to use"
-  type        = string
-  default     = "Standard_DS1_v2"
+  type        = map(string)
+  default = {
+    Development = "Standard_DS1_v2",
+    Production  = "Standard_DS1_v2"
+  }
 }
 
 variable "computer-name" {
@@ -79,6 +94,12 @@ variable "vm-availability-zones" {
 variable "storage-account-name" {
   description = "Name of the storage account"
   type        = string
+  default     = "globomatic"
+}
+
+variable "container_name" {
+  description = "Name of the storage account container"
+  type        = list(string)
 }
 
 variable "subscription-id" {
@@ -88,6 +109,9 @@ variable "subscription-id" {
 
 variable "number-of-vm" {
   description = "Number of VMs to be deployed"
-  type = number
-  default = 2
+  type        = map(number)
+  default = {
+    Development = 2,
+    Production  = 3
+  }
 }

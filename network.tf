@@ -4,32 +4,24 @@ resource "azurerm_resource_group" "globomatics-rg" {
   tags     = local.common-tags
 }
 
-resource "azurerm_virtual_network" "globomatics-network" {
-  depends_on          = [azurerm_resource_group.globomatics-rg]
-  name                = "globomatics-network"
+module "network" {
+  source              = "Azure/network/azurerm"
+  version             = "=5.2.0"
+  vnet_name           = "${local.common-tags.project}-vnet"
   resource_group_name = local.rg-name
-  location            = local.rg-location
-  address_space       = var.network-address-space
+  address_space       = var.network-address-space[terraform.workspace]
+  subnet_prefixes     = [for netnum in range(var.vpc-subnet-count[terraform.workspace]) : cidrsubnet(var.network-address-space[terraform.workspace], 8, netnum+1)]
+  subnet_names        = [for num in range(var.vpc-subnet-count[terraform.workspace]) : "subnet${num + 1}"]
+
+  use_for_each = true
+  tags         = local.common-tags
+
+  depends_on = [azurerm_resource_group.globomatics-rg]
 }
 
-resource "azurerm_subnet" "subnet1" {
-  depends_on           = [azurerm_virtual_network.globomatics-network]
-  name                 = "subnet1"
-  resource_group_name  = local.rg-name
-  virtual_network_name = azurerm_virtual_network.globomatics-network.name
-  address_prefixes     = ["10.0.10.0/24"]
-}
-
-resource "azurerm_subnet" "frontend" {
-  depends_on           = [azurerm_virtual_network.globomatics-network]
-  name                 = "AGSsubnet"
-  resource_group_name  = local.rg-name
-  virtual_network_name = azurerm_virtual_network.globomatics-network.name
-  address_prefixes     = ["10.0.20.0/24"]
-}
 
 resource "azurerm_network_security_group" "allowInboundTCP" {
-  depends_on          = [azurerm_virtual_network.globomatics-network]
+  depends_on          = [azurerm_resource_group.globomatics-rg]
   name                = "allowInboundTCP"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -46,14 +38,15 @@ resource "azurerm_network_security_group" "allowInboundTCP" {
   }
 }
 
-resource "azurerm_subnet_network_security_group_association" "subnet1AllowTCP" {
+resource "azurerm_subnet_network_security_group_association" "subnetsAllowTCP" {
   depends_on                = [azurerm_network_security_group.allowInboundTCP]
-  subnet_id                 = azurerm_subnet.subnet1.id
+  count                     = var.vpc-subnet-count[terraform.workspace]
+  subnet_id                 = module.network.vnet_subnets[count.index]
   network_security_group_id = azurerm_network_security_group.allowInboundTCP.id
 }
 
 resource "azurerm_public_ip" "vm-public-ip" {
-  count = var.number-of-vm
+  count               = var.number-of-vm[terraform.workspace]
   depends_on          = [azurerm_resource_group.globomatics-rg]
   name                = "vm${count.index + 1}-pip"
   resource_group_name = local.rg-name
@@ -72,14 +65,14 @@ resource "azurerm_public_ip" "lb-pip" {
 }
 
 resource "azurerm_network_interface" "nic" {
-  count = var.number-of-vm
-  depends_on          = [azurerm_subnet.subnet1]
-  name                = "nic${count.index}"
+  count               = var.number-of-vm[terraform.workspace]
+  depends_on          = [module.network]
+  name                = "nic${count.index + 1}"
   resource_group_name = local.rg-name
   location            = local.rg-location
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.subnet1.id
+    subnet_id                     = module.network.vnet_subnets[0]
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.vm-public-ip[count.index].id
   }

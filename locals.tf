@@ -1,18 +1,18 @@
-resource "random_integer" "rand" {
-  min = 10000
-  max = 99999
-  # keepers = {
-  #   # Generate a new integer each time we switch to a new listener ARN
-  #   listener_arn = var.listener_arn
-  # }
-}
+# resource "random_integer" "rand" {
+#   min = 10000
+#   max = 99999
+#   # keepers = {
+#   #   # Generate a new integer each time we switch to a new listener ARN
+#   #   listener_arn = var.listener_arn
+#   # }
+# }
 
 
 locals {
   rg-location = var.resource-group-location
   rg-name     = var.resource-group-name
   common-tags = {
-    enviroment = var.enviroment-name
+    enviroment = terraform.workspace
     project    = var.project-name
     company    = var.company-name
   }
@@ -26,6 +26,5 @@ locals {
   request_routing_rule_name      = "webserver-AGS-rqrt"
   redirect_configuration_name    = "webserver-AGS-rdrcfg"
 
-  # storage container
-  container-name = "web-resources-${random_integer.rand.result}"
+  storage_account_name = "globomatics${random_pet.pet_name.id}"
 }

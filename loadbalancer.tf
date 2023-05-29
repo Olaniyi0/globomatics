@@ -1,5 +1,5 @@
 resource "azurerm_application_gateway" "webserver-gateway" {
-  depends_on          = [azurerm_subnet.frontend]
+  depends_on          = [module.network]
   name                = "webserver-gateway"
   resource_group_name = local.rg-name
   location            = local.rg-location
@@ -14,7 +14,7 @@ resource "azurerm_application_gateway" "webserver-gateway" {
 
   gateway_ip_configuration {
     name      = "webserver-gateway-ip-configuration"
-    subnet_id = azurerm_subnet.frontend.id
+    subnet_id = module.network.vnet_subnets[1]
   }
 
   frontend_port {
@@ -29,7 +29,7 @@ resource "azurerm_application_gateway" "webserver-gateway" {
 
   backend_address_pool {
     name         = local.backend_address_pool_name
-    ip_addresses = [for nic in azurerm_network_interface.nic: nic.private_ip_address]
+    ip_addresses = [for nic in azurerm_network_interface.nic : nic.private_ip_address]
   }
 
   backend_http_settings {
@@ -58,16 +58,16 @@ resource "azurerm_application_gateway" "webserver-gateway" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "app-gateway-log" {
-  depends_on = [ azurerm_application_gateway.webserver-gateway ]
+  depends_on         = [azurerm_application_gateway.webserver-gateway]
   name               = "app-gateway-access-logs"
   target_resource_id = azurerm_application_gateway.webserver-gateway.id
-  storage_account_id = azurerm_storage_account.globomatics-storage-account.id
+  storage_account_id = module.globomatics_storage.storage_account.id
 
   enabled_log {
     category = "ApplicationGatewayAccessLog"
-     retention_policy {
+    retention_policy {
       enabled = true
-      days = 0
+      days    = 0
     }
   }
 }
